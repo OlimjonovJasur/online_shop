@@ -1,3 +1,5 @@
+from tkinter.constants import CASCADE
+
 from django.db import models
 from decimal import Decimal
 from phonenumber_field.modelfields import PhoneNumberField
@@ -71,3 +73,21 @@ class Order(BaseModel):
 
     def __str__(self):
         return f'{self.full_name} => {self.phone_number}'
+
+
+class Comment(BaseModel):
+    name = models.CharField(max_length=255, null=True, blank=True)
+    email = models.EmailField()
+    content = models.TextField()
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='comments', null=True, blank=True)
+
+    is_negative = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.name} => {self.created_at}"
+
+    class Meta:
+        #verbose_name = 'comment'
+        ordering = ['-created_at']
+
+

@@ -2,11 +2,11 @@ from itertools import product
 from typing import Optional
 
 from django.contrib import messages
-from django.shortcuts import render, get_object_or_404
+from django.shortcuts import render, get_object_or_404, redirect
 from unicodedata import category
 
-from shop.models import Product, Order, Category
-from shop.forms import OrderForm
+from shop.models import Product, Order, Category, Comment
+from shop.forms import OrderForm, CommentModelForm
 
 
 # Create your views here.
@@ -29,8 +29,9 @@ def index(request, category_id: Optional[int] = None):
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
     #product = Product.object.get(id=pk)
+    comments = Comment.objects.filter(product=product, is_negative=False)
 
-    return render(request, 'shop/detail.html', {'product': product})
+    return render(request, 'shop/detail.html', {'product': product, 'comments': comments})
 
 def order_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
@@ -71,3 +72,20 @@ def order_detail(request, pk):
     }
 
     return render(request, 'shop/detail.html', connect)
+
+
+def comment_view(request, pk):
+    product = get_object_or_404(Product, id=pk)
+    form = CommentModelForm()
+    if request.method == 'POST':
+        form = CommentModelForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.product = product
+            comment.save()
+            return redirect('product_detail', pk)
+    context = {
+        'product': product,
+        'form': form,
+    }
+    return render(request, 'shop/detail.html', context=context)
