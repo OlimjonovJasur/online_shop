@@ -1,7 +1,7 @@
 from django import forms
 from phonenumber_field.modelfields import PhoneNumberField
 
-from shop.models import Comment
+from shop.models import Comment, Product
 
 
 class OrderForm(forms.Form):
@@ -10,9 +10,11 @@ class OrderForm(forms.Form):
     quantity = forms.IntegerField()
 
 
-class OrderModelForm(forms.Form):
-    pass
-
+class ProductModelForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = '__all__'
+        # exclude = ()
 
 class CommentModelForm(forms.ModelForm):
     class Meta:
