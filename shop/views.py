@@ -4,7 +4,6 @@ from typing import Optional
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, get_object_or_404, redirect
-from unicodedata import category
 
 from shop.models import Product, Order, Category, Comment
 from shop.forms import OrderForm, CommentModelForm, ProductModelForm
@@ -14,12 +13,34 @@ from shop.forms import OrderForm, CommentModelForm, ProductModelForm
 
 
 def index(request, category_id: Optional[int] = None):
+    search_query = request.GET.get('q', '')
+    filter_type = request.GET.get('filter', '')
     categories = Category.objects.all()
     if category_id:
-        products = Product.objects.filter(category_id=category_id)
+        if filter_type == 'expensive':
+            products = Product.objects.filter(category_id=category_id).order_by('-price')
+        elif filter_type == 'cheap':
+            products = Product.objects.filter(category_id=category_id).order_by('price')
+        elif filter_type == 'rating':
+            products = Product.objects.filter(category_id=category_id, rating__gte=4).order_by('-rating')
+
+        else:
+            products = Product.objects.filter(category_id=category_id)
+
     else:
-        products = Product.objects.all()
-    categories = Category.objects.all()
+        if filter_type == 'expensive':
+            products = Product.objects.all().order_by('-price')
+        elif filter_type == 'cheap':
+            products = Product.objects.all().order_by('price')
+        elif filter_type == 'rating':
+            products = Product.objects.filter(rating__gte=3).order_by('-rating')
+
+        else:
+            products = Product.objects.all()
+
+    if search_query:
+        products = Product.objects.filter(name__icontains=search_query)
+
 
     context = {
         'products': products,
@@ -29,10 +50,17 @@ def index(request, category_id: Optional[int] = None):
 
 def product_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
-    #product = Product.object.get(id=pk)
     comments = Comment.objects.filter(product=product, is_negative=False)
+    related_products = Product.objects.filter(category_id=product.category).exclude(id=product.id)
 
-    return render(request, 'shop/detail.html', {'product': product, 'comments': comments})
+    context = {
+        'product': product,
+        'comments': comments,
+        'related_products': related_products
+    }
+
+    return render(request, 'shop/detail.html', context=context)
+
 
 def order_detail(request, pk):
     product = get_object_or_404(Product, pk=pk)
@@ -131,4 +159,5 @@ def product_edit(request, pk):
     }
 
     return render(request, 'shop/create.html', context=context)
+
 
