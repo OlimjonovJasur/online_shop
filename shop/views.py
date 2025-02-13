@@ -112,7 +112,7 @@ def comment_view(request, pk):
             comment = form.save(commit=False)
             comment.product = product
             comment.save()
-            return redirect('product_detail', pk)
+            return redirect('shop:product_detail', pk)
     context = {
         'product': product,
         'form': form,
@@ -126,7 +126,7 @@ def product_create(request):
         form = ProductModelForm(request.POST, request.FILES)
         if form.is_valid():
             form.save()
-            return redirect('products')
+            return redirect('shop:products')
     else:
         form = ProductModelForm()
     context = {
@@ -139,7 +139,7 @@ def product_delete(request, pk):
     try:
         product = Product.objects.get(id=pk)
         product.delete()
-        return redirect('products')
+        return redirect('shop:products')
     except Product.DoesNotExists as e:
         print(e)
 
@@ -151,7 +151,7 @@ def product_edit(request, pk):
         form = ProductModelForm(request.POST, request.FILES, instance=product)
         if form.is_valid():
             form.save()
-            return redirect('product_detail', pk)
+            return redirect('shop:product_detail', pk)
     context = {
         'form': form,
         'product': product,
